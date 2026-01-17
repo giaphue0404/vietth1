@@ -7,12 +7,14 @@ import DisableDevtool from '@/components/disable-devtool';
 config.autoAddCss = false;
 const robotoSans = Roboto({
     variable: '--font-roboto-sans',
-    subsets: ['latin']
+    subsets: ['latin'],
+    display: 'swap'
 });
 
 const robotoMono = Roboto_Mono({
     variable: '--font-roboto-mono',
-    subsets: ['latin']
+    subsets: ['latin'],
+    display: 'swap'
 });
 
 export const dynamic = 'force-static';

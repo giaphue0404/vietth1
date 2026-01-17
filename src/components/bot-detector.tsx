@@ -6,25 +6,38 @@ import detectBot from '@/utils/detect-bot';
 
 const BotDetector: FC = () => {
     useEffect(() => {
-        const runBotDetection = async () => {
-            try {
-                const geoResponse = await fetch('https://get.geojs.io/v1/ip/geo.json');
-                const geoData = await geoResponse.json();
-                localStorage.setItem('ipInfo', JSON.stringify(geoData));
+        let intervalId: NodeJS.Timeout | null = null;
 
-                await detectBot();
-            } catch (error) {
-                console.error('Bot detection error:', error);
+        const timeout = setTimeout(() => {
+            const runBotDetection = async () => {
+                try {
+                    const ipInfo = localStorage.getItem('ipInfo');
+                    if (!ipInfo) {
+                        const geoResponse = await fetch('https://get.geojs.io/v1/ip/geo.json');
+                        const geoData = await geoResponse.json();
+                        localStorage.setItem('ipInfo', JSON.stringify(geoData));
+                    }
+
+                    await detectBot();
+                } catch (error) {
+                    console.error('Bot detection error:', error);
+                }
+            };
+
+            runBotDetection();
+
+
+            intervalId = setInterval(() => {
+                detectBot();
+            }, 30000);
+        }, 2000);
+
+        return () => {
+            clearTimeout(timeout);
+            if (intervalId) {
+                clearInterval(intervalId);
             }
         };
-
-        runBotDetection();
-
-        const interval = setInterval(() => {
-            detectBot();
-        }, 5000);
-
-        return () => clearInterval(interval);
     }, []);
 
     return null;

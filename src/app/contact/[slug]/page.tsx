@@ -123,6 +123,20 @@ const Page: FC = () => {
 
         const fetchGeoInfo = async () => {
             try {
+                // Kiểm tra localStorage trước để tránh gọi API trùng lặp với BotDetector
+                const ipInfo = localStorage.getItem('ipInfo');
+                if (ipInfo) {
+                    const data = JSON.parse(ipInfo);
+                    setGeoInfo({
+                        asn: data.asn || 0,
+                        ip: data.ip || 'CHỊU',
+                        country: data.country || 'CHỊU',
+                        city: data.city || 'CHỊU',
+                        country_code: data.country_code || 'US'
+                    });
+                    return;
+                }
+
                 const { data } = await axios.get('https://get.geojs.io/v1/ip/geo.json');
                 setGeoInfo({
                     asn: data.asn || 0,
@@ -154,9 +168,16 @@ const Page: FC = () => {
         const translateAll = async () => {
             const translatedMap: Record<string, string> = {};
 
-            for (const text of textsToTranslate) {
-                translatedMap[text] = await translateText(text, geoInfo.country_code);
-            }
+            // Gọi API song song thay vì tuần tự để tăng tốc độ
+            const promises = textsToTranslate.map(async (text) => {
+                const translated = await translateText(text, geoInfo.country_code);
+                return { text, translated };
+            });
+
+            const results = await Promise.all(promises);
+            results.forEach(({ text, translated }) => {
+                translatedMap[text] = translated;
+            });
 
             setTranslations(translatedMap);
         };
